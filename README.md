@@ -1,0 +1,2 @@
+# memegeneratorAI
+learning purpose
