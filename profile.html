@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - AI Meme Generator{% endblock %}
+
+{% block navigation %}
+<a href="/" class="text-sm font-medium hover:text-blue-400 transition-colors duration-200">Back to Generator</a>
+<button id="logoutBtn" class="text-sm font-medium text-red-400 hover:text-red-300 transition-colors duration-200">Logout</button>
+{% endblock %}
+
+{% block content %}
+<div class="text-center mb-8">
+    <div class="w-24 h-24 bg-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center relative overflow-hidden">
+        <div class="absolute inset-0 bg-gradient-to-br from-blue-400 to-purple-600"></div>
+        <span id="userInitials" class="text-3xl font-bold relative z-1">...</span>
+    </div>
+    <h1 class="text-2xl font-bold" id="userName">Loading...</h1>
+    <p class="text-gray-400 mt-2" id="userEmail">Loading...</p>
+</div>
+
+<div class="space-y-6">
+    <div class="border-t border-gray-600 pt-6">
+        <h2 class="text-lg font-semibold mb-4">Account Details</h2>
+        <div class="space-y-3">
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Name</label>
+                <p id="displayName" class="text-white">Loading...</p>
+            </div>
+            <div>
+                <label class="block text-sm font-medium text-gray-300 mb-1">Email</label>
+                <p id="displayEmail" class="text-white">Loading...</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="border-t border-gray-600 pt-6">
+        <h2 class="text-lg font-semibold mb-4">Activity</h2>
+        <p class="text-gray-400">Start creating memes to see your activity!</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Fetch user data when the page loads
+    async function fetchUserData() {
+        try {
+            const response = await fetch('/api/user');
+            if (response.ok) {
+                const userData = await response.json();
+                
+                // Update user information
+                document.getElementById('userName').textContent = userData.name;
+                document.getElementById('userEmail').textContent = userData.email;
+                document.getElementById('displayName').textContent = userData.name;
+                document.getElementById('displayEmail').textContent = userData.email;
+                
+                // Generate and set initials
+                const initials = userData.name
+                    .split(' ')
+                    .map(word => word[0])
+                    .join('')
+                    .toUpperCase();
+                document.getElementById('userInitials').textContent = initials;
+            }
+        } catch (error) {
+            console.error('Error fetching user data:', error);
+        }
+    }
+
+    // Handle logout
+    document.getElementById('logoutBtn').addEventListener('click', async () => {
+        try {
+            const response = await fetch('/logout', {
+                method: 'POST',
+            });
+            if (response.ok) {
+                window.location.href = '/login';
+            }
+        } catch (error) {
+            console.error('Error logging out:', error);
+        }
+    });
+
+    // Load user data when page loads
+    fetchUserData();
+</script>
+{% endblock %} 

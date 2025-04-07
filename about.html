@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}About - AI Meme Generator{% endblock %}
+
+{% block navigation %}
+<a href="/" class="text-sm font-medium hover:text-blue-400 transition-colors duration-200">Back to Generator</a>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-3xl mx-auto">
+    <h1 class="text-3xl font-bold text-center mb-8">About AI Meme Generator</h1>
+    
+    <div class="space-y-8">
+        <section>
+            <h2 class="text-xl font-semibold mb-4">Our Mission</h2>
+            <p class="text-gray-300 leading-relaxed">
+                AI Meme Generator aims to revolutionize meme creation by combining cutting-edge AI technology with human creativity. 
+                We believe that everyone should have access to tools that make expressing themselves through memes easier and more fun.
+            </p>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-semibold mb-4">Technology</h2>
+            <p class="text-gray-300 leading-relaxed mb-4">
+                Our platform leverages state-of-the-art AI models and technologies:
+            </p>
+            <ul class="list-disc list-inside space-y-2 text-gray-300">
+                <li>Google's Gemini 1.5 for intelligent text generation</li>
+                <li>Advanced image generation APIs</li>
+                <li>Modern web technologies for a seamless experience</li>
+                <li>Secure user authentication and data handling</li>
+            </ul>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-semibold mb-4">Features</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-[#2A2B32] p-4 rounded-lg">
+                    <h3 class="font-medium mb-2">Smart Meme Generation</h3>
+                    <p class="text-gray-400">Create unique memes with AI-powered text and image generation</p>
+                </div>
+                <div class="bg-[#2A2B32] p-4 rounded-lg">
+                    <h3 class="font-medium mb-2">User Profiles</h3>
+                    <p class="text-gray-400">Save and manage your favorite meme creations</p>
+                </div>
+                <div class="bg-[#2A2B32] p-4 rounded-lg">
+                    <h3 class="font-medium mb-2">Easy Sharing</h3>
+                    <p class="text-gray-400">Share your memes directly to social media</p>
+                </div>
+                <div class="bg-[#2A2B32] p-4 rounded-lg">
+                    <h3 class="font-medium mb-2">Customization</h3>
+                    <p class="text-gray-400">Personalize your memes with various styles and options</p>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <h2 class="text-xl font-semibold mb-4">Contact</h2>
+            <p class="text-gray-300 leading-relaxed">
+                Have questions or suggestions? We'd love to hear from you! Contact us at 
+                <a href="mailto:support@aimemegenerator.com" class="text-blue-400 hover:text-blue-300 transition-colors duration-200">
+                    support@aimemegenerator.com
+                </a>
+            </p>
+        </section>
+    </div>
+</div>
+{% endblock %} 

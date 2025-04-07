@@ -1,0 +1,266 @@
+{% extends "base.html" %}
+
+{% block title %}AI Meme Generator{% endblock %}
+
+{% block extra_css %}
+<style>
+    .sidebar-item:hover {
+        background-color: rgba(52, 53, 65, 0.9);
+    }
+    .delete-btn {
+        opacity: 0;
+        transition: opacity 0.2s ease-in-out;
+    }
+    .sidebar-item:hover .delete-btn {
+        opacity: 1;
+    }
+    .download-btn {
+        transition: all 0.2s ease-in-out;
+    }
+    .download-btn:hover {
+        transform: translateY(-2px);
+    }
+</style>
+{% endblock %}
+
+{% block navigation %}
+<a href="/about" class="text-sm font-medium hover:text-blue-400 transition-colors duration-200">About Us</a>
+<a href="/profile" class="text-sm font-medium hover:text-blue-400 transition-colors duration-200">Profile</a>
+{% endblock %}
+
+{% block content %}
+<div class="flex">
+    <!-- Sidebar -->
+    <div class="w-64 bg-[#202123] h-screen fixed left-[-550px] top-0 flex flex-col z-10">
+        <!-- Sidebar Header -->
+        <div class="p-4 border-b border-gray-600 flex items-center justify-between">
+            <button id="newMemeBtn" class="text-sm font-medium bg-transparent hover:bg-gray-700 rounded-lg px-3 py-2 flex items-center gap-2 transition-colors duration-200">
+                <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round" class="h-4 w-4">
+                    <line x1="12" y1="5" x2="12" y2="19"></line>
+                    <line x1="5" y1="12" x2="19" y2="12"></line>
+                </svg>
+                New Meme
+            </button>
+            <button id="clearHistoryBtn" class="text-sm font-medium text-red-400 hover:text-red-300 transition-colors duration-200">
+                Clear All
+            </button>
+        </div>
+
+        <!-- History Sections -->
+        <div class="flex-1 overflow-y-auto">
+            <div class="p-2">
+                <div class="text-xs text-gray-400 font-medium uppercase py-2 px-2">Today</div>
+                <div id="today-history" class="space-y-1">
+                    <!-- Today's memes will be added here dynamically -->
+                </div>
+
+                <div class="text-xs text-gray-400 font-medium uppercase py-2 px-2 mt-4">Previous 7 Days</div>
+                <div id="week-history" class="space-y-1">
+                    <!-- Previous week's memes will be added here dynamically -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 ml-30">
+        <div class="max-w-2xl mx-auto px-4 py-8">
+            <h1 class="text-3xl font-bold text-center mb-8">AI Meme Generator</h1>
+            
+            <div class="space-y-4">
+                <textarea id="prompt" rows="4" placeholder="Enter your meme concept here..."
+                    class="w-full px-4 py-3 rounded-lg bg-[#2A2B32] border border-gray-600 text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 resize-none"></textarea>
+                
+                <div class="flex justify-center">
+                    <button id="generateBtn" class="bg-blue-600 text-white rounded-lg px-6 py-2 font-medium hover:bg-blue-700 transition-colors duration-200">
+                        Generate Meme
+                    </button>
+                </div>
+
+                <div id="result" class="mt-8 text-center hidden">
+                    <div class="relative inline-block">
+                        <img id="memeImage" class="max-w-full h-auto mx-auto rounded-lg shadow-lg" alt="Generated meme">
+                        <button id="downloadBtn" onclick="downloadMeme()" class="download-btn absolute bottom-4 right-4 bg-blue-600 hover:bg-blue-700 text-white rounded-full p-3 shadow-lg flex items-center gap-2">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                            </svg>
+                            <span>Download</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="loading" class="mt-8 text-center hidden">
+                    <p class="text-gray-400">Generating your meme...</p>
+                </div>
+
+                <div id="error" class="mt-8 text-center hidden">
+                    <p class="text-red-400">An error occurred. Please try again.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Store meme history in localStorage
+    const memeHistory = JSON.parse(localStorage.getItem('memeHistory') || '[]');
+
+    function addToHistory(prompt, imageUrl) {
+        const now = new Date();
+        const meme = {
+            id: Date.now().toString(), // Add unique ID for each meme
+            prompt,
+            imageUrl,
+            timestamp: now.toISOString()
+        };
+        memeHistory.unshift(meme);
+        localStorage.setItem('memeHistory', JSON.stringify(memeHistory));
+        updateHistoryDisplay();
+    }
+
+    function deleteMeme(id) {
+        const index = memeHistory.findIndex(meme => meme.id === id);
+        if (index !== -1) {
+            memeHistory.splice(index, 1);
+            localStorage.setItem('memeHistory', JSON.stringify(memeHistory));
+            updateHistoryDisplay();
+        }
+    }
+
+    function clearHistory() {
+        if (confirm('Are you sure you want to clear all meme history?')) {
+            memeHistory.length = 0;
+            localStorage.setItem('memeHistory', JSON.stringify(memeHistory));
+            updateHistoryDisplay();
+            document.getElementById('prompt').value = '';
+            document.getElementById('result').classList.add('hidden');
+        }
+    }
+
+    function updateHistoryDisplay() {
+        const todaySection = document.getElementById('today-history');
+        const weekSection = document.getElementById('week-history');
+        
+        todaySection.innerHTML = '';
+        weekSection.innerHTML = '';
+
+        const now = new Date();
+        const today = now.toDateString();
+        const weekAgo = new Date(now - 7 * 24 * 60 * 60 * 1000);
+
+        memeHistory.forEach(meme => {
+            const memeDate = new Date(meme.timestamp);
+            const historyItem = createHistoryItem(meme);
+
+            if (memeDate.toDateString() === today) {
+                todaySection.appendChild(historyItem);
+            } else if (memeDate > weekAgo) {
+                weekSection.appendChild(historyItem);
+            }
+        });
+    }
+
+    function createHistoryItem(meme) {
+        const div = document.createElement('div');
+        div.className = 'sidebar-item p-2 rounded-lg hover:bg-[#2A2B32] cursor-pointer text-sm group relative';
+        div.innerHTML = `
+            <div class="flex justify-between items-start">
+                <div class="flex-1 min-w-0" onclick="loadMeme('${meme.id}')">
+                    <div class="truncate">${meme.prompt}</div>
+                    <div class="text-xs text-gray-400">${new Date(meme.timestamp).toLocaleTimeString()}</div>
+                </div>
+                <button class="delete-btn ml-2 text-red-400 hover:text-red-300 p-1 rounded transition-colors duration-200" 
+                        onclick="event.stopPropagation(); deleteMeme('${meme.id}')">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                </button>
+            </div>
+        `;
+        return div;
+    }
+
+    function loadMeme(id) {
+        const meme = memeHistory.find(m => m.id === id);
+        if (meme) {
+            document.getElementById('prompt').value = meme.prompt;
+            document.getElementById('memeImage').src = meme.imageUrl;
+            document.getElementById('result').classList.remove('hidden');
+        }
+    }
+
+    // Download functionality
+    function downloadMeme() {
+        const memeImage = document.getElementById('memeImage');
+        const prompt = document.getElementById('prompt').value;
+        
+        // Create a temporary link element
+        const link = document.createElement('a');
+        link.href = memeImage.src;
+        
+        // Generate filename from prompt or use timestamp
+        const filename = prompt
+            ? `meme_${prompt.substring(0, 30).replace(/[^a-z0-9]/gi, '_').toLowerCase()}.png`
+            : `meme_${new Date().toISOString().split('T')[0]}.png`;
+        
+        link.download = filename;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    }
+
+    // Generate button handler
+    document.getElementById('generateBtn').addEventListener('click', async () => {
+        const prompt = document.getElementById('prompt').value;
+        const loading = document.getElementById('loading');
+        const result = document.getElementById('result');
+        const error = document.getElementById('error');
+        const memeImage = document.getElementById('memeImage');
+
+        if (!prompt) return;
+
+        loading.classList.remove('hidden');
+        result.classList.add('hidden');
+        error.classList.add('hidden');
+
+        try {
+            const response = await fetch('/generate', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ prompt }),
+            });
+
+            if (response.ok) {
+                const blob = await response.blob();
+                const imageUrl = URL.createObjectURL(blob);
+                memeImage.src = imageUrl;
+                result.classList.remove('hidden');
+                addToHistory(prompt, imageUrl);
+            } else {
+                error.classList.remove('hidden');
+            }
+        } catch (err) {
+            error.classList.remove('hidden');
+        } finally {
+            loading.classList.add('hidden');
+        }
+    });
+
+    // New meme button handler
+    document.getElementById('newMemeBtn').addEventListener('click', () => {
+        document.getElementById('prompt').value = '';
+        document.getElementById('result').classList.add('hidden');
+        document.getElementById('error').classList.add('hidden');
+    });
+
+    // Clear history button handler
+    document.getElementById('clearHistoryBtn').addEventListener('click', clearHistory);
+
+    // Initialize history display
+    updateHistoryDisplay();
+</script>
+{% endblock %} 
